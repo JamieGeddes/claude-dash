@@ -44,3 +44,18 @@ final class OverlayPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 }
+
+/// The panel never becomes key, so without first-mouse acceptance the close
+/// button would eat the initial click instead of acting on it.
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    required init(rootView: Content) {
+        super.init(rootView: rootView)
+    }
+
+    @available(*, unavailable)
+    @objc required dynamic init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) is not supported")
+    }
+}

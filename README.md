@@ -32,6 +32,9 @@ always-on-top Porsche 911 GT3–style instrument cluster.
 
 State lives in `~/Library/Application Support/ClaudeDash/`.
 
+The panel is draggable; hover over it for a close button (hides it — reopen
+from the menu bar gauge icon, which also has Settings and Quit).
+
 ## Build
 
 ```sh

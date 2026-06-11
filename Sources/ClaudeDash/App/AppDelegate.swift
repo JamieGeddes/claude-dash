@@ -76,7 +76,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
 
         rebuildPanel()
-        maybeOfferStatuslineInstall()
+
+        // Defer the one-time consent prompt so it can never block SwiftUI's
+        // scene setup — the menu bar item must exist before any modal runs.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            self?.maybeOfferStatuslineInstall()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -124,7 +130,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     func rebuildPanel() {
         let design = DesignRegistry.design(id: settings.designId)
-        let view = design.makeView(model: model)
+        let view = PanelChrome(onClose: { [weak self] in self?.hidePanel() }) {
+            design.makeView(model: model)
+        }
 
         let oldOrigin = panel?.frame.origin
         panel?.orderOut(nil)
@@ -134,7 +142,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             size: design.preferredSize,
             origin: oldOrigin ?? settings.windowOrigin
         )
-        newPanel.contentView = NSHostingView(rootView: view)
+        newPanel.contentView = FirstMouseHostingView(rootView: view)
         panel = newPanel
         if panelVisible {
             newPanel.orderFrontRegardless()
@@ -149,6 +157,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } else {
             panel.orderOut(nil)
         }
+    }
+
+    func hidePanel() {
+        guard panelVisible else { return }
+        togglePanel()
     }
 
     @objc private func windowMoved(_ notification: Notification) {
