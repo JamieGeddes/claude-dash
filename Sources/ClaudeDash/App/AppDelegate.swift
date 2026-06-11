@@ -46,8 +46,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             demoDriver = DemoDriver(monitor: monitor, model: model)
             demoDriver?.start()
         } else {
-            startWatcher()
-            startFuelSource()
+            // Spend seeding must finish before the watcher starts so seeded
+            // ranges and live ingest never overlap (see SpendSeeder).
+            var snapshot = store.state
+            Task.detached(priority: .utility) { [weak self] in
+                SpendSeeder.seed(state: &snapshot)
+                let seeded = snapshot
+                await MainActor.run { [weak self] in
+                    guard let self else { return }
+                    store.state.monthlySpend = seeded.monthlySpend
+                    store.state.spendSeeded = seeded.spendSeeded
+                    store.state.version = seeded.version
+                    store.scheduleSave()
+                    monitor.refresh()
+                    startWatcher()
+                    startFuelSource()
+                }
+            }
         }
 
         settings.$designId
@@ -191,7 +206,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         sample.tripTokens = 48_212
         sample.fiveHour = RateLimitWindow(usedPercentage: 38, resetsAt: Date().addingTimeInterval(2 * 3600 + 840))
         sample.sevenDay = RateLimitWindow(usedPercentage: 61, resetsAt: Date().addingTimeInterval(3 * 86_400))
-        if args.contains("--enterprise") { sample.plan = .enterprise }
+        if args.contains("--enterprise") {
+            sample.plan = .enterprise
+            sample.monthlySpendUSD = 1_842.50
+            sample.monthlyQuotaUSD = 5_000
+            sample.monthResetsAt = Pricing.nextMonthStart()
+        }
         if args.contains("--stale") { sample.fuelStale = true }
         if args.contains("--low-fuel") {
             sample.fiveHour = RateLimitWindow(usedPercentage: 91, resetsAt: Date().addingTimeInterval(2_400))

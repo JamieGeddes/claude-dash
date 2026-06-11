@@ -20,6 +20,15 @@ struct GT3ClusterView: View {
                     )
                     .offset(y: 16)
                     .zIndex(0)
+                } else {
+                    // Enterprise: fuel = monthly $ quota (local estimate)
+                    GT3FuelGaugeView(
+                        window: model.monthlyQuota,
+                        stale: false,
+                        caption: "MO"
+                    )
+                    .offset(y: 16)
+                    .zIndex(0)
                 }
 
                 GT3TachometerView(model: model)
@@ -30,6 +39,13 @@ struct GT3ClusterView: View {
                         window: model.sevenDay,
                         stale: model.fuelStale,
                         caption: "7D"
+                    )
+                    .offset(y: 16)
+                    .zIndex(0)
+                } else {
+                    GT3SpendDialView(
+                        spendUSD: model.monthlySpendUSD,
+                        quotaUSD: model.monthlyQuotaUSD
                     )
                     .offset(y: 16)
                     .zIndex(0)

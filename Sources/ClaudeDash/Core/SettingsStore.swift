@@ -25,6 +25,10 @@ final class SettingsStore: ObservableObject {
     @Published var statuslinePromptShown: Bool {
         didSet { defaults.set(statuslinePromptShown, forKey: "statuslinePromptShown") }
     }
+    /// Enterprise: monthly max-spend quota in USD; 0 = unset.
+    @Published var monthlyQuotaUSD: Double {
+        didSet { defaults.set(monthlyQuotaUSD, forKey: "monthlyQuotaUSD") }
+    }
     var windowOrigin: CGPoint? {
         get {
             guard let raw = defaults.string(forKey: "windowOrigin") else { return nil }
@@ -50,5 +54,6 @@ final class SettingsStore: ObservableObject {
         self.designId = defaults.string(forKey: "designId") ?? "gt3"
         self.configDirOverride = defaults.string(forKey: "configDirOverride") ?? ""
         self.statuslinePromptShown = defaults.bool(forKey: "statuslinePromptShown")
+        self.monthlyQuotaUSD = defaults.double(forKey: "monthlyQuotaUSD")
     }
 }

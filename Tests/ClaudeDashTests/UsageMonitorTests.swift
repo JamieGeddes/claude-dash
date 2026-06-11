@@ -99,6 +99,18 @@ final class UsageMonitorTests: XCTestCase {
         XCTAssertGreaterThan(model.tokensPerMinute, 0)
     }
 
+    func testMonthlySpendAccumulates() {
+        let (store, model, monitor, _) = makeStack()
+        // 1M output tokens on current Opus = $25.
+        let e = UsageEvent(requestId: "req_s", sessionId: "s1", timestamp: Date(),
+                           input: 0, output: 1_000_000, cacheCreation: 0, cacheRead: 0,
+                           model: "claude-opus-4-8")
+        monitor.apply(update([e]))
+        let key = Pricing.monthKey(for: Date())
+        XCTAssertEqual(store.state.monthlySpend?[key] ?? 0, 25.0, accuracy: 0.001)
+        XCTAssertEqual(model.monthlySpendUSD, 25.0, accuracy: 0.001)
+    }
+
     func testCheckpointStored() {
         let (store, _, monitor, _) = makeStack()
         monitor.apply(update([event("req_1")], file: "/a/b.jsonl", offset: 4_242))

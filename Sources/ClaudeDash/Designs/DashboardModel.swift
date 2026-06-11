@@ -44,6 +44,21 @@ final class DashboardModel: ObservableObject {
     /// render limit gauges dimmed with a staleness cue.
     @Published var fuelStale: Bool = false
 
+    // Monthly spend quota (Enterprise) — estimated $ from local transcripts
+    @Published var monthlySpendUSD: Double = 0
+    /// 0 = no quota configured.
+    @Published var monthlyQuotaUSD: Double = 0
+    @Published var monthResetsAt: Date?
+
+    /// Fuel-gauge view of the monthly quota: F = nothing spent, E = quota hit.
+    var monthlyQuota: RateLimitWindow? {
+        guard monthlyQuotaUSD > 0 else { return nil }
+        return RateLimitWindow(
+            usedPercentage: min(100, monthlySpendUSD / monthlyQuotaUSD * 100),
+            resetsAt: monthResetsAt
+        )
+    }
+
     // Configuration designs may reflect
     @Published var plan: PlanType = .maxOrPro
     @Published var includeCacheTokens: Bool = false

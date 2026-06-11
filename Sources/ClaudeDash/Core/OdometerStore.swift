@@ -11,12 +11,30 @@ struct SessionTotals: Codable, Equatable, Sendable {
 }
 
 struct DashState: Codable, Sendable {
-    var version = 1
+    var version = 2
     var totals = TokenTotals()
     var files: [String: FileCheckpoint] = [:]
     var recentRequestIds: [String] = []
     var sessions: [String: SessionTotals] = [:]
     var activeSessionId: String?
+    /// Estimated $ spend per calendar month ("YYYY-MM"). Optional so v1
+    /// state files (pre-spend) still decode without resetting the odometer.
+    var monthlySpend: [String: Double]?
+    /// True once historical spend has been derived from transcripts already
+    /// counted under v1 (see SpendSeeder).
+    var spendSeeded: Bool?
+
+    mutating func addSpend(_ usd: Double, monthKey: String) {
+        var spend = monthlySpend ?? [:]
+        spend[monthKey, default: 0] += usd
+        // Keep a year of history; prune the rest.
+        if spend.count > 13 {
+            for key in spend.keys.sorted().dropLast(13) {
+                spend.removeValue(forKey: key)
+            }
+        }
+        monthlySpend = spend
+    }
 }
 
 /// Persists the odometer state to Application Support. Totals are independent

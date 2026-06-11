@@ -13,6 +13,7 @@ enum TranscriptParser {
 
         struct Message: Decodable {
             let usage: Usage?
+            let model: String?
         }
 
         struct Usage: Decodable {
@@ -20,6 +21,12 @@ enum TranscriptParser {
             let output_tokens: Int?
             let cache_creation_input_tokens: Int?
             let cache_read_input_tokens: Int?
+            let cache_creation: CacheCreation?
+        }
+
+        struct CacheCreation: Decodable {
+            let ephemeral_5m_input_tokens: Int?
+            let ephemeral_1h_input_tokens: Int?
         }
     }
 
@@ -61,7 +68,10 @@ enum TranscriptParser {
             input: usage.input_tokens ?? 0,
             output: usage.output_tokens ?? 0,
             cacheCreation: usage.cache_creation_input_tokens ?? 0,
-            cacheRead: usage.cache_read_input_tokens ?? 0
+            cacheRead: usage.cache_read_input_tokens ?? 0,
+            model: decoded.message?.model,
+            cacheCreation5m: usage.cache_creation?.ephemeral_5m_input_tokens ?? 0,
+            cacheCreation1h: usage.cache_creation?.ephemeral_1h_input_tokens ?? 0
         )
     }
 }

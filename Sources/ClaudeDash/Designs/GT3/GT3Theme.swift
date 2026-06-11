@@ -31,6 +31,10 @@ enum GT3Theme {
         return FontLoader.font(candidates: candidates, size: size, weight: weight)
     }
 
+    static func currency(_ usd: Double) -> String {
+        usd >= 100 ? String(format: "$%.0f", usd) : String(format: "$%.2f", usd)
+    }
+
     static func formatted(_ value: Int) -> String {
         Self.groupingFormatter.string(from: NSNumber(value: value)) ?? String(value)
     }

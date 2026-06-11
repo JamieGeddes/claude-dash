@@ -57,7 +57,8 @@ final class DemoDriver {
             input: Int.random(in: 200...1_500) * (burst ? 4 : 1),
             output: Int.random(in: 100...2_500) * (burst ? 3 : 1),
             cacheCreation: Int.random(in: 0...2_000),
-            cacheRead: Int.random(in: 1_000...30_000)
+            cacheRead: Int.random(in: 1_000...30_000),
+            model: "claude-fable-5"
         )
         monitor.apply(TranscriptWatcher.Update(
             events: [event],

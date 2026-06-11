@@ -38,7 +38,12 @@ struct SettingsView: View {
                     }
                 }
                 if settings.plan == .enterprise {
-                    Text("Enterprise plans have no personal 5-hour window, so the fuel gauges are hidden. Org-level usage via the Admin API is planned.")
+                    TextField(
+                        "Monthly max spend (USD)",
+                        value: $settings.monthlyQuotaUSD,
+                        format: .number.precision(.fractionLength(0...2))
+                    )
+                    Text("Enterprise plans have no personal 5-hour window, so the fuel gauge tracks this monthly budget instead: spend is estimated from this machine's usage (tokens × published API pricing, including cache rates) and resets on the 1st. Set 0 to disable.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

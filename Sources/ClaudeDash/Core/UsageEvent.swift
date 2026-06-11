@@ -9,6 +9,27 @@ struct UsageEvent: Equatable, Sendable {
     let output: Int
     let cacheCreation: Int
     let cacheRead: Int
+    /// Model ID (e.g. "claude-fable-5") — drives the cost estimate.
+    let model: String?
+    /// Cache-write split by TTL when the transcript provides it (5m bills
+    /// at 1.25x input, 1h at 2x).
+    let cacheCreation5m: Int
+    let cacheCreation1h: Int
+
+    init(requestId: String, sessionId: String, timestamp: Date,
+         input: Int, output: Int, cacheCreation: Int, cacheRead: Int,
+         model: String? = nil, cacheCreation5m: Int = 0, cacheCreation1h: Int = 0) {
+        self.requestId = requestId
+        self.sessionId = sessionId
+        self.timestamp = timestamp
+        self.input = input
+        self.output = output
+        self.cacheCreation = cacheCreation
+        self.cacheRead = cacheRead
+        self.model = model
+        self.cacheCreation5m = cacheCreation5m
+        self.cacheCreation1h = cacheCreation1h
+    }
 
     func tokens(includingCache: Bool) -> Int {
         let base = input + output

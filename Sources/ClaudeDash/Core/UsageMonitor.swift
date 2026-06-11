@@ -47,6 +47,10 @@ final class UsageMonitor {
         let now = Date()
         for event in counted {
             store.state.totals.add(event)
+            store.state.addSpend(
+                Pricing.costUSD(of: event),
+                monthKey: Pricing.monthKey(for: event.timestamp)
+            )
             var session = store.state.sessions[event.sessionId]
                 ?? SessionTotals(totals: TokenTotals(), lastEvent: event.timestamp)
             session.totals.add(event)
@@ -88,6 +92,11 @@ final class UsageMonitor {
         store.saveNow()
     }
 
+    /// Re-publish after out-of-band state changes (e.g. spend seeding).
+    func refresh() {
+        publishCounters()
+    }
+
     private func publishCounters() {
         let includeCache = settings.includeCacheTokens
         model.includeCacheTokens = includeCache
@@ -100,6 +109,10 @@ final class UsageMonitor {
         } else {
             model.tripTokens = 0
         }
+
+        model.monthlySpendUSD = store.state.monthlySpend?[Pricing.monthKey(for: Date())] ?? 0
+        model.monthlyQuotaUSD = settings.monthlyQuotaUSD
+        model.monthResetsAt = Pricing.nextMonthStart()
     }
 
     // MARK: - Rate ticking (needle decay)
