@@ -81,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             object: nil
         )
 
+        repairStatuslineIfNeeded()
         rebuildPanel()
 
         // Defer the one-time consent prompt so it can never block SwiftUI's
@@ -232,6 +233,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         } catch {
             FileHandle.standardError.write(Data("error: \(error.localizedDescription)\n".utf8))
             exit(1)
+        }
+    }
+
+    /// Early installs wrote the forwarder path unquoted; the shell mis-parses
+    /// the space in "Application Support" and the statusline silently fails.
+    /// The user already consented to the install, so rewriting our own entry
+    /// into the working quoted form needs no new prompt.
+    private func repairStatuslineIfNeeded() {
+        guard !isDemoMode else { return }
+        let configDir = Paths.claudeConfigDir(override: settings.configDirOverride)
+        if StatuslineInstaller.needsRepair(configDir: configDir) {
+            try? StatuslineInstaller.install(configDir: configDir)
         }
     }
 

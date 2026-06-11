@@ -29,6 +29,27 @@ enum StatuslineInstaller {
         scriptDir.appendingPathComponent("statusline-forwarder.sh")
     }
 
+    /// Claude Code executes statusline commands through the shell, so the
+    /// path must be quoted — Application Support contains a space.
+    static func installedCommand(scriptDir: URL = Paths.appSupportDir) -> String {
+        shellQuote(scriptURL(scriptDir: scriptDir).path)
+    }
+
+    private static func isOurCommand(_ command: String, scriptDir: URL) -> Bool {
+        command == installedCommand(scriptDir: scriptDir)
+            || command == scriptURL(scriptDir: scriptDir).path // legacy unquoted form
+    }
+
+    /// True when our entry is present but in the legacy unquoted form, which
+    /// the shell mis-parses because of the space in "Application Support".
+    static func needsRepair(configDir: URL, scriptDir: URL = Paths.appSupportDir) -> Bool {
+        guard let settings = readSettings(configDir: configDir),
+              let statusLine = settings["statusLine"] as? [String: Any],
+              let command = statusLine["command"] as? String else { return false }
+        return command == scriptURL(scriptDir: scriptDir).path
+            && command != installedCommand(scriptDir: scriptDir)
+    }
+
     private static func originalCommandURL(scriptDir: URL) -> URL {
         scriptDir.appendingPathComponent("statusline-original.json")
     }
@@ -43,7 +64,7 @@ enum StatuslineInstaller {
               let command = statusLine["command"] as? String else {
             return .notInstalled
         }
-        return command == scriptURL(scriptDir: scriptDir).path ? .installed : .foreign(command: command)
+        return isOurCommand(command, scriptDir: scriptDir) ? .installed : .foreign(command: command)
     }
 
     static func install(configDir: URL, scriptDir: URL = Paths.appSupportDir) throws {
@@ -64,7 +85,7 @@ enum StatuslineInstaller {
         var chainedCommand: String?
         if let existing = settings["statusLine"] as? [String: Any],
            let command = existing["command"] as? String,
-           command != scriptURL(scriptDir: scriptDir).path {
+           !isOurCommand(command, scriptDir: scriptDir) {
             chainedCommand = command
             let record = try JSONSerialization.data(withJSONObject: existing, options: [.prettyPrinted])
             try? record.write(to: originalCommandURL(scriptDir: scriptDir), options: .atomic)
@@ -72,7 +93,7 @@ enum StatuslineInstaller {
 
         try writeForwarderScript(chainedCommand: chainedCommand, scriptDir: scriptDir)
 
-        settings["statusLine"] = ["type": "command", "command": scriptURL(scriptDir: scriptDir).path]
+        settings["statusLine"] = ["type": "command", "command": installedCommand(scriptDir: scriptDir)]
         try writeSettings(settings, to: settingsURL)
     }
 
@@ -82,7 +103,8 @@ enum StatuslineInstaller {
             throw InstallerError.unreadableSettings
         }
         guard let statusLine = settings["statusLine"] as? [String: Any],
-              statusLine["command"] as? String == scriptURL(scriptDir: scriptDir).path else {
+              let command = statusLine["command"] as? String,
+              isOurCommand(command, scriptDir: scriptDir) else {
             return // not ours; leave untouched
         }
         if let data = try? Data(contentsOf: originalCommandURL(scriptDir: scriptDir)),

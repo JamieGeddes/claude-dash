@@ -38,7 +38,9 @@ final class StatuslineInstallerTests: XCTestCase {
 
         let statusLine = try XCTUnwrap(settings["statusLine"] as? [String: Any])
         XCTAssertEqual(statusLine["type"] as? String, "command")
-        XCTAssertEqual(statusLine["command"] as? String, StatuslineInstaller.scriptURL(scriptDir: scriptDir).path)
+        // Must be shell-quoted: Claude Code runs this through sh, and the real
+        // install path contains a space ("Application Support").
+        XCTAssertEqual(statusLine["command"] as? String, StatuslineInstaller.installedCommand(scriptDir: scriptDir))
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: backupURL.path))
         XCTAssertEqual(try String(contentsOf: backupURL, encoding: .utf8), original)
@@ -97,6 +99,55 @@ final class StatuslineInstallerTests: XCTestCase {
         try StatuslineInstaller.uninstall(configDir: configDir, scriptDir: scriptDir)
         let settings = try readSettings()
         XCTAssertEqual((settings["statusLine"] as? [String: Any])?["command"] as? String, "/bin/other")
+    }
+
+    func testInstalledCommandExecutesDespiteSpacesInPath() throws {
+        // scriptDir deliberately contains a space, like the real install path.
+        let spacedDir = configDir.appendingPathComponent("App Support")
+        try FileManager.default.createDirectory(at: spacedDir, withIntermediateDirectories: true)
+        try StatuslineInstaller.install(configDir: configDir, scriptDir: spacedDir)
+
+        let settings = try readSettings()
+        let command = try XCTUnwrap((settings["statusLine"] as? [String: Any])?["command"] as? String)
+
+        // Execute exactly as Claude Code does: sh -c "<command>", JSON on stdin.
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", command]
+        let stdin = Pipe(), stdout = Pipe()
+        process.standardInput = stdin
+        process.standardOutput = stdout
+        process.environment = ProcessInfo.processInfo.environment.merging(
+            ["HOME": configDir.path], uniquingKeysWith: { _, new in new }
+        )
+        try process.run()
+        stdin.fileHandleForWriting.write(Data(#"{"rate_limits":{"five_hour":{"used_percentage":12}}}"#.utf8))
+        try stdin.fileHandleForWriting.close()
+        process.waitUntilExit()
+
+        XCTAssertEqual(process.terminationStatus, 0)
+        let stored = configDir.appendingPathComponent("Library/Application Support/ClaudeDash/statusline.json")
+        let data = try Data(contentsOf: stored)
+        let parsed = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNotNil(parsed["rate_limits"])
+    }
+
+    func testLegacyUnquotedEntryIsDetectedAndRepaired() throws {
+        // Simulate an install made before quoting was fixed.
+        let unquoted = StatuslineInstaller.scriptURL(scriptDir: scriptDir).path
+        try JSONSerialization.data(withJSONObject: ["statusLine": ["type": "command", "command": unquoted]])
+            .write(to: settingsURL)
+
+        XCTAssertEqual(StatuslineInstaller.status(configDir: configDir, scriptDir: scriptDir), .installed)
+        XCTAssertTrue(StatuslineInstaller.needsRepair(configDir: configDir, scriptDir: scriptDir))
+
+        try StatuslineInstaller.install(configDir: configDir, scriptDir: scriptDir)
+        XCTAssertFalse(StatuslineInstaller.needsRepair(configDir: configDir, scriptDir: scriptDir))
+        let settings = try readSettings()
+        XCTAssertEqual(
+            (settings["statusLine"] as? [String: Any])?["command"] as? String,
+            StatuslineInstaller.installedCommand(scriptDir: scriptDir)
+        )
     }
 
     func testRefusesToModifyCorruptSettings() throws {
