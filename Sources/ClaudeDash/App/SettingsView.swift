@@ -91,7 +91,13 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 460)
-        .onAppear(perform: refreshStatus)
+        .onAppear {
+            refreshStatus()
+            appDelegate.settingsWindowOpen = true
+        }
+        .onDisappear {
+            appDelegate.settingsWindowOpen = false
+        }
     }
 
     private func refreshStatus() {

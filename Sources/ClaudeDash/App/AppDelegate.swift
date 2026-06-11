@@ -18,6 +18,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
     @Published var panelVisible = true
 
+    /// While Settings is open the panel yields its always-on-top level so the
+    /// Settings window isn't trapped underneath it.
+    var settingsWindowOpen = false {
+        didSet { panel?.level = settingsWindowOpen ? .normal : .floating }
+    }
+
     var isDemoMode: Bool {
         ProcessInfo.processInfo.environment["CLAUDE_DASH_DEMO"] == "1"
     }
@@ -143,6 +149,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             origin: oldOrigin ?? settings.windowOrigin
         )
         newPanel.contentView = FirstMouseHostingView(rootView: view)
+        newPanel.level = settingsWindowOpen ? .normal : .floating
         panel = newPanel
         if panelVisible {
             newPanel.orderFrontRegardless()

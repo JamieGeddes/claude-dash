@@ -21,13 +21,17 @@ struct ClaudeDashApp: App {
 
 private struct MenuContent: View {
     @EnvironmentObject private var appDelegate: AppDelegate
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Button(appDelegate.panelVisible ? "Hide Dashboard" : "Show Dashboard") {
             appDelegate.togglePanel()
         }
-        SettingsLink {
-            Text("Settings…")
+        Button("Settings…") {
+            // Accessory apps never activate on their own, so without this the
+            // Settings window opens behind every other app and looks broken.
+            NSApp.activate(ignoringOtherApps: true)
+            openSettings()
         }
         Divider()
         LaunchAtLoginToggle()
