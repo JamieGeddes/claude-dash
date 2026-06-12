@@ -48,6 +48,15 @@ enum LotusTheme {
         return FontLoader.font(candidates: candidates, size: size, weight: weight)
     }
 
+    /// The donor cluster's dial numerals are slanted; captions stay upright.
+    static func numeral(_ size: CGFloat) -> Font {
+        FontLoader.font(
+            candidates: ["GillSans-SemiBoldItalic", "GillSans-Italic", "SairaSemiCondensed-SemiBold"],
+            size: size,
+            weight: .semibold
+        )
+    }
+
     static func lcd(_ size: CGFloat) -> Font {
         .system(size: size, weight: .bold, design: .monospaced)
     }

@@ -41,7 +41,7 @@ struct LotusTachView: View {
                 label: { String(Int($0)) },
                 tickColor: LotusTheme.ink,
                 redColor: LotusTheme.needleRed,
-                numeralFont: LotusTheme.dial(diameter * 0.095, weight: .semibold),
+                numeralFont: LotusTheme.numeral(diameter * 0.095),
                 numeralColor: LotusTheme.ink
             )
 

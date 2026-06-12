@@ -30,11 +30,11 @@ struct LotusSpeedoView: View {
                 sweep: Self.sweep,
                 majorStep: 20,
                 minorStep: 10,
-                redZone: 0...16,
+                redZone: nil,
                 label: { String(Int($0)) },
                 tickColor: LotusTheme.ink,
                 redColor: LotusTheme.needleRed,
-                numeralFont: LotusTheme.dial(diameter * 0.082, weight: .semibold),
+                numeralFont: LotusTheme.numeral(diameter * 0.082),
                 numeralColor: LotusTheme.ink,
                 labelRadius: 0.68
             )
@@ -50,20 +50,21 @@ struct LotusSpeedoView: View {
                 label: { $0 == 0 ? nil : String(Int($0)) },
                 tickColor: LotusTheme.inkSoft,
                 redColor: LotusTheme.needleRed,
-                numeralFont: LotusTheme.dial(diameter * 0.036, weight: .regular),
+                numeralFont: LotusTheme.numeral(diameter * 0.036),
                 numeralColor: LotusTheme.inkSoft,
                 majorTickLength: 0.03,
                 tickInset: 0.42,
                 labelRadius: 0.46
             )
 
+            // KM/H sits below the hub, above the MPH-position caption.
             Text("KM/H")
                 .font(LotusTheme.dial(diameter * 0.038, weight: .regular))
                 .foregroundColor(LotusTheme.inkSoft)
-                .offset(y: -diameter * 0.13)
+                .offset(y: diameter * 0.13)
 
             captionBlock
-                .offset(y: diameter * 0.21)
+                .offset(y: diameter * 0.23)
 
             if hasData {
                 NeedleView(
