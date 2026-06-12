@@ -3,7 +3,29 @@
 A native macOS menu-bar app that shows your Claude Code token usage as an
 always-on-top Porsche 911 GT3–style instrument cluster.
 
-![reference](gt3.avif)
+## Skins
+
+Pick a cluster design in Settings. Every skin renders the same
+`DashboardModel`, so the readings below are identical — only the styling
+changes. The shots show a live rate of **6,420 tok/min**, a **48,212**-token
+trip, a **12,345,678** all-time odometer, and **62% / 39%** left on the 5-hour
+and 7-day windows.
+
+### 911 GT3
+
+<img src="docs/gt3.png" alt="911 GT3 skin" width="480">
+
+### Lotus Exige
+
+<img src="docs/lotus.png" alt="Lotus Exige skin" width="480">
+
+On **Enterprise**, the rate-limit fuel gauges are replaced by an estimated
+monthly-spend gauge (here **$1,842 of $5,000/mo**):
+
+<img src="docs/gt3-enterprise.png" alt="911 GT3 skin, Enterprise spend gauge" width="480">
+<img src="docs/lotus-enterprise.png" alt="Lotus Exige skin, Enterprise spend gauge" width="480">
+
+The visual references for each design are `gt3.avif` and `exige.jpg`.
 
 ## Gauges
 
