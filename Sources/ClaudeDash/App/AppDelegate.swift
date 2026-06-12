@@ -217,7 +217,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             sample.fiveHour = RateLimitWindow(usedPercentage: 91, resetsAt: Date().addingTimeInterval(2_400))
         }
 
-        let design = DesignRegistry.design(id: settings.designId)
+        var designId = settings.designId
+        if let designIndex = args.firstIndex(of: "--design"), args.count > designIndex + 1 {
+            designId = args[designIndex + 1]
+        }
+        let design = DesignRegistry.design(id: designId)
         let renderer = ImageRenderer(
             content: design.makeView(model: sample)
                 .frame(width: design.preferredSize.width, height: design.preferredSize.height)

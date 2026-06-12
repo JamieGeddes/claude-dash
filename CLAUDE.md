@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Claude Dash: a native macOS (14+) menu-bar app showing Claude Code token usage as an always-on-top Porsche 911 GT3-style gauge cluster. Pure SwiftPM (no .xcodeproj), unsandboxed, Swift 5.10 language mode. `gt3.avif` is the visual reference for the GT3 design.
+Claude Dash: a native macOS (14+) menu-bar app showing Claude Code token usage as an always-on-top Porsche 911 GT3-style gauge cluster. Pure SwiftPM (no .xcodeproj), unsandboxed, Swift 5.10 language mode. `gt3.avif` is the visual reference for the GT3 design; `exige.jpg` for the Lotus design.
 
 ## Commands
 

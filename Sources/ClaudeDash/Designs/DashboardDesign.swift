@@ -15,7 +15,8 @@ protocol DashboardDesign {
 @MainActor
 enum DesignRegistry {
     static let all: [any DashboardDesign] = [
-        GT3Design()
+        GT3Design(),
+        LotusDesign()
     ]
 
     static func design(id: String) -> any DashboardDesign {
